@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "evt_night_siege",
+    "title": "Night Siege - Round 1",
+    "description": "Set your troops in advance!",
+    "dayOfWeek": 6,
+    "hour": 18,
+    "minute": 0,
+    "color": "#e83a3a",
+    "notifOffsets": [
+      5,
+      0
+    ],
+    "active": true,
+    "recurring": true,
+    "createdAt": 1779569097387
+  },
+  {
+    "id": "evt_1779570978301_b7zh4",
+    "title": "Night Siege - Round 2",
+    "description": "",
+    "dayOfWeek": 6,
+    "hour": 20,
+    "minute": 0,
+    "color": "#d4a800",
+    "notifOffsets": [
+      5,
+      0
+    ],
+    "active": true,
+    "recurring": true,
+    "createdAt": 1779570978301
+  }
+]
