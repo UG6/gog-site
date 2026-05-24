@@ -4,7 +4,7 @@
     "title": "Night Siege - Round 1",
     "description": "Set your troops in advance!",
     "dayOfWeek": 6,
-    "hour": 18,
+    "hour": 20,
     "minute": 0,
     "color": "#e83a3a",
     "notifOffsets": [
@@ -19,7 +19,7 @@
     "id": "evt_1779570978301_b7zh4",
     "title": "Night Siege - Round 2",
     "description": "",
-    "dayOfWeek": 6,
+    "dayOfWeek": 0,
     "hour": 20,
     "minute": 0,
     "color": "#d4a800",
