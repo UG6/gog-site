@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Guns of Glory Alliance Event Tracker – countdown timers, creature reminders, browser notifications for your alliance." />
+  <meta name="theme-color" content="#0d0d1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GoG Tracker" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <title>TheOutlanders - GoG</title>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Splash -->
+    <div id="splash" class="splash">
+      <div class="splash-inner">
+        <img src="/icons/icon-192.png" alt="TheOutlanders - GoG" class="splash-icon" />
+        <h1 class="splash-title">TheOutlanders - GoG</h1>
+        <div class="splash-loader"></div>
+      </div>
+    </div>
+
+    <!-- Top bar -->
+    <header class="top-bar" id="top-bar">
+      <span class="app-logo">⚔️ TheOutlanders - GoG</span>
+
+      <div class="top-bar-clocks">
+        <div class="clock-block">
+          <span class="clock-label">UTC</span>
+          <span class="clock-time" id="utc-clock">--:--:--</span>
+        </div>
+        <div class="clock-divider">|</div>
+        <div class="clock-block">
+          <span class="clock-label">LOCAL</span>
+          <span class="clock-time" id="local-clock">--:--:--</span>
+        </div>
+      </div>
+
+      <div class="top-bar-actions">
+        <button id="notif-btn"   class="top-btn" aria-label="Test notification" title="Test notification">🔔</button>
+      </div>
+    </header>
+
+    <!-- Single scrollable page -->
+    <main id="app-content"></main>
+
+    <!-- Toast -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Modal -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div id="modal-box" class="modal-box"></div>
+    </div>
+
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

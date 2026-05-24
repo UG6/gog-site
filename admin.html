@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <title>Developer Admin - TheOutlanders</title>
+  <style>
+    body { background: #0d0d1a; color: #fff; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
+    h1 { font-family: 'Rajdhani', sans-serif; color: #d4a800; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .layout { display: flex; gap: 20px; flex-wrap: wrap; }
+    .panel { flex: 1; min-width: 300px; background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 8px; padding: 20px; }
+    textarea { width: 100%; height: 400px; background: #000; color: #0f0; font-family: monospace; border: 1px solid #444; padding: 10px; box-sizing: border-box; }
+    .btn { background: #3a8bcd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: 'Inter'; font-weight: 600; }
+    .btn:hover { background: #2980b9; }
+    .btn-danger { background: #e83a3a; }
+    .btn-danger:hover { background: #c0392b; }
+    .event-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 10px; border-left: 4px solid; }
+    .actions button { margin-left: 5px; cursor: pointer; }
+    .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  </style>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <h1>🛠 Developer Admin: Event JSON Generator</h1>
+  <p style="color: #aaa;">This page is NOT built into the public website. Use this to generate your <code>events.json</code> file.</p>
+  
+  <div class="layout">
+    <!-- Left: Event List -->
+    <div class="panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-family: 'Rajdhani';">Local Scratchpad</h2>
+        <button class="btn" id="admin-add-btn">＋ Add Event</button>
+      </div>
+      <div id="admin-events-list"></div>
+      <hr style="border-color: #333; margin: 20px 0;" />
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-danger" id="admin-clear-btn" style="font-size: 0.8rem;">Clear Local Events</button>
+        <button class="btn" id="admin-load-public-btn" style="background:#444; font-size: 0.8rem;">Load from public/data/events.json</button>
+      </div>
+    </div>
+
+    <!-- Right: JSON Output -->
+    <div class="panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-family: 'Rajdhani';">Generated events.json</h2>
+        <button class="btn" id="admin-copy-btn">📋 Copy JSON</button>
+      </div>
+      <p style="font-size: 0.85rem; color: #888; margin-top: 0;">Copy this text and paste it into <code>public/data/events.json</code></p>
+      <textarea id="admin-json-out" readonly></textarea>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Modal Overlay -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-box" class="modal-box"></div>
+  </div>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+</html>
