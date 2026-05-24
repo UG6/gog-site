@@ -447,10 +447,54 @@ export function updateLiveElements() {
   const onMapTimerEl = document.getElementById('on-map-timer');
   if (banner) {
     if (onMap) {
-      banner.style.display = '';
-      if (onMapTimerEl) onMapTimerEl.textContent = formatCountdown(onMap.remainingMs);
+      // If the banner is empty (creature just came on map without a refresh),
+      // inject the full banner HTML so it displays correctly.
+      if (!onMapTimerEl) {
+        banner.style.cssText = `
+          background: rgba(46,204,113,0.12);
+          border: 1px solid rgba(46,204,113,0.35);
+          border-radius: var(--radius-md);
+          padding: 10px 14px; margin-bottom: 12px;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 8px;
+        `;
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:1.1rem">🟢</span>
+            <div>
+              <div style="font-weight:600;font-size:0.85rem;color:var(--green)">
+                Creatures are ON THE MAP!
+              </div>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px">
+                Go capture now — available until ${formatUTCTime(new Date(onMap.endMs))} UTC
+              </div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--green)" id="on-map-timer">
+              ${formatCountdown(onMap.remainingMs)}
+            </div>
+            <div style="font-size:0.6rem;color:var(--text-muted);letter-spacing:0.5px">REMAINING</div>
+          </div>
+        `;
+        // Also re-render the spawn slots so the "ON MAP" badge appears
+        const appContent = document.getElementById('app-content');
+        if (appContent) { renderApp(appContent); return; }
+      } else {
+        banner.style.display = '';
+        onMapTimerEl.textContent = formatCountdown(onMap.remainingMs);
+      }
     } else {
-      banner.style.display = 'none';
+      // Creature just went off map — clear the banner content and hide it
+      if (onMapTimerEl) {
+        banner.style.display = 'none';
+        banner.innerHTML = '';
+        // Re-render so spawn slots update (ON MAP → DONE/NEXT)
+        const appContent = document.getElementById('app-content');
+        if (appContent) { renderApp(appContent); return; }
+      } else {
+        banner.style.display = 'none';
+      }
     }
   }
 
