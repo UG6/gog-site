@@ -228,7 +228,7 @@ function creatureSectionHTML() {
                 Creatures are ON THE MAP!
               </div>
               <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px">
-                Go capture now — available until ${formatUTCTime(new Date(onMap.endMs))} UTC
+                Go capture now — available until ${formatUTCTime(new Date(onMap.endMs))}
               </div>
             </div>
           </div>
@@ -466,7 +466,7 @@ export function updateLiveElements() {
                 Creatures are ON THE MAP!
               </div>
               <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px">
-                Go capture now — available until ${formatUTCTime(new Date(onMap.endMs))} UTC
+                Go capture now — available until ${formatUTCTime(new Date(onMap.endMs))}
               </div>
             </div>
           </div>
