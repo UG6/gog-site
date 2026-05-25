@@ -89,10 +89,13 @@ export function renderApp(container) {
   const sorted  = [...events].sort((a, b) => getEventMs(a) - getEventMs(b));
   const nextEvt = sorted.find(e => e.active);
 
-  // Kingdom events
-  const allKingdom = getKingdomEvents().filter(e =>
-    !e.hidden && e.active && (e.recurring !== false || (e.targetMs || 0) > Date.now())
-  );
+  // Kingdom events — keep one-time events visible through their full duration window
+  const allKingdom = getKingdomEvents().filter(e => {
+    if (e.hidden || !e.active) return false;
+    if (e.recurring !== false) return true;
+    const durationMs = (e.durationHours || 1) * 3600 * 1000;
+    return (e.targetMs || 0) + durationMs > Date.now();
+  });
   const sortedKingdom = [...allKingdom].sort((a, b) => {
     const aS = getKingdomEventStatus(a);
     const bS = getKingdomEventStatus(b);
@@ -105,7 +108,6 @@ export function renderApp(container) {
     <div class="fade-in">
       ${notifBannerHTML()}
       ${heroSectionHTML(nextEvt)}
-      ${kingdomHeroPanelHTML(sortedKingdom)}
       <div class="main-grid">
         ${creatureSectionHTML()}
         <div class="events-column-wrap">
@@ -165,64 +167,6 @@ function heroSectionHTML(evt) {
           <span id="cd-s">${parts.s}</span>
           <span class="countdown-label">SEC</span>
         </div>
-      </div>
-    </div>
-  `;
-}
-
-// ── Kingdom Hero Mini-Panel ────────────────────────────────────────
-/**
- * Shown below the main hero card when ≥1 kingdom event is active or starting
- * within 24h. Each row shows live countdown with phase label.
- * Hidden entirely when nothing qualifies.
- */
-function kingdomHeroPanelHTML(sortedKingdom) {
-  // Filter to only active or upcoming (within 24h) events
-  const visible = sortedKingdom.filter(e => {
-    const s = getKingdomEventStatus(e);
-    return s.phase === 'active' || s.phase === 'upcoming';
-  });
-
-  const hasKillActive = visible.some(e => e.isKillEvent && getKingdomEventStatus(e).phase === 'active');
-
-  return `
-    <div id="kingdom-hero-panel" class="kingdom-hero-panel ${visible.length === 0 ? 'hidden' : ''}">
-      <div class="kingdom-hero-panel-header">
-        <span class="kingdom-hero-panel-title">🏰 Kingdom Events</span>
-        ${hasKillActive ? `<span class="kill-event-pill">☠️ KILL EVENT IN PROGRESS</span>` : ''}
-      </div>
-      <div id="kingdom-hero-rows">
-        ${visible.length > 0
-          ? visible.map(e => kingdomHeroRowHTML(e)).join('')
-          : ''
-        }
-      </div>
-    </div>
-  `;
-}
-
-function kingdomHeroRowHTML(evt) {
-  const status = getKingdomEventStatus(evt);
-  const isActive = status.phase === 'active';
-  const ms = isActive ? status.remainingMs : status.msUntilStart;
-  const phaseLabel = isActive ? 'ENDS IN' : 'STARTS IN';
-  const phaseClass = isActive ? 'active' : 'upcoming';
-
-  return `
-    <div class="kingdom-hero-row ${phaseClass} ${evt.isKillEvent ? 'kill-event' : ''}" id="khrow-${evt.id}">
-      <div class="kingdom-hero-row-left">
-        <span class="kingdom-hero-row-dot" style="background:${evt.color}"></span>
-        <div>
-          <div class="kingdom-hero-row-title">
-            ${evt.isKillEvent ? '<span class="kill-badge">☠️ Kill Event</span>' : ''}
-            ${evt.title}
-          </div>
-          ${evt.description ? `<div class="kingdom-hero-row-desc">${evt.description}</div>` : ''}
-        </div>
-      </div>
-      <div class="kingdom-hero-row-right">
-        <div class="kingdom-hero-phase-label">${phaseLabel}</div>
-        <div class="kingdom-hero-countdown ${isActive ? 'active' : 'upcoming'}" data-kingdom-cd="${evt.id}" data-kingdom-phase="${phaseClass}">${formatCountdown(ms)}</div>
       </div>
     </div>
   `;
@@ -670,9 +614,12 @@ export function updateLiveElements() {
  * without a full page re-render.
  */
 function _updateKingdomLive() {
-  const allKingdom = getKingdomEvents().filter(e =>
-    !e.hidden && e.active && (e.recurring !== false || (e.targetMs || 0) > Date.now())
-  );
+  const allKingdom = getKingdomEvents().filter(e => {
+    if (e.hidden || !e.active) return false;
+    if (e.recurring !== false) return true;
+    const durationMs = (e.durationHours || 1) * 3600 * 1000;
+    return (e.targetMs || 0) + durationMs > Date.now();
+  });
 
   // Track whether any event changed phase (active↔upcoming) since last render
   // We detect this by checking if any [data-kingdom-phase] element needs updating
@@ -702,28 +649,6 @@ function _updateKingdomLive() {
   if (needsRerender) {
     const appContent = document.getElementById('app-content');
     if (appContent) { renderApp(appContent); return; }
-  }
-
-  // ─ Kingdom hero mini-panel show/hide ────────────────────────
-  const panel = document.getElementById('kingdom-hero-panel');
-  if (panel) {
-    const visibleEvents = allKingdom.filter(e => {
-      const s = getKingdomEventStatus(e);
-      return s.phase === 'active' || s.phase === 'upcoming';
-    });
-
-    if (visibleEvents.length === 0) {
-      panel.classList.add('hidden');
-    } else {
-      panel.classList.remove('hidden');
-
-      // Update kill pill visibility
-      const killPill = panel.querySelector('.kill-event-pill');
-      const hasKillActive = visibleEvents.some(e => e.isKillEvent && getKingdomEventStatus(e).phase === 'active');
-      if (killPill) {
-        killPill.style.display = hasKillActive ? '' : 'none';
-      }
-    }
   }
 
   // ─ Kill event danger banner show/hide ───────────────────────

@@ -108,8 +108,16 @@ export function formatLocalTime(date) {
  * Works for both alliance events and kingdom events.
  */
 export function scheduleEventNotifications(events) {
-  events.filter(e => e.active && e.recurring).forEach(evt => {
-    const next = getNextOccurrence(evt.dayOfWeek, evt.hour, evt.minute);
+  events.filter(e => e.active).forEach(evt => {
+    const isRecurring = evt.recurring !== false;
+
+    // For one-time events: skip if already past start time
+    if (!isRecurring && (!evt.targetMs || evt.targetMs <= Date.now())) return;
+
+    const next = isRecurring
+      ? getNextOccurrence(evt.dayOfWeek, evt.hour, evt.minute)
+      : new Date(evt.targetMs);
+
     const offsets = evt.notifOffsets || [60, 15, 0];
     offsets.forEach(offsetMin => {
       const fireAt = next.getTime() - offsetMin * 60 * 1000;
