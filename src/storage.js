@@ -5,6 +5,7 @@
 
 const KEYS = {
   EVENTS: 'gog_events',
+  KINGDOM_EVENTS: 'gog_kingdom_events',
   SETTINGS: 'gog_settings',
   CREATURE: 'gog_creature',
 };
@@ -44,6 +45,8 @@ function set(key, value) {
   }
 }
 
+// ── Alliance Events (public, fetched from events.json) ──────────
+
 let _cachedEvents = [];
 
 export async function fetchPublicEvents() {
@@ -67,10 +70,38 @@ export function saveEvents(events) {
   _cachedEvents = events; // Only modifies in-memory state for the current session
 }
 
+// ── Kingdom Events (public, fetched from kingdom_events.json) ───
+
+let _cachedKingdomEvents = [];
+
+export async function fetchPublicKingdomEvents() {
+  try {
+    const res = await fetch('/data/kingdom_events.json?t=' + Date.now());
+    if (res.ok) {
+      _cachedKingdomEvents = await res.json();
+    } else {
+      console.warn('Could not load kingdom_events.json');
+    }
+  } catch (e) {
+    console.warn('Error loading kingdom_events.json', e);
+  }
+}
+
+export function getKingdomEvents() {
+  return _cachedKingdomEvents;
+}
+
+export function saveKingdomEvents(events) {
+  _cachedKingdomEvents = events;
+}
+
 // ── Admin Local Storage ─────────────────────────────────────────
 
 export function getLocalEvents() { return get(KEYS.EVENTS, []); }
 export function saveLocalEvents(events) { set(KEYS.EVENTS, events); }
+
+export function getLocalKingdomEvents() { return get(KEYS.KINGDOM_EVENTS, []); }
+export function saveLocalKingdomEvents(events) { set(KEYS.KINGDOM_EVENTS, events); }
 
 
 // ── Settings ────────────────────────────────────────────────────

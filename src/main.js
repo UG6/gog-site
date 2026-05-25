@@ -7,11 +7,11 @@ import {
   startTimerEngine, registerTick,
   scheduleEventNotifications, scheduleCreatureNotifications,
 } from './timers.js';
-import { getEvents, getCreature } from './storage.js';
+import { getEvents, getCreature, getKingdomEvents } from './storage.js';
 import { requestNotificationPermission, sendNotification, playAlert } from './notifications.js';
 import { renderApp, updateLiveElements, showToast } from './ui.js';
 
-import { fetchPublicEvents } from './storage.js';
+import { fetchPublicEvents, fetchPublicKingdomEvents } from './storage.js';
 
 // No admin mode on public site
 window._gogIsAdmin = () => false;
@@ -48,15 +48,22 @@ function tick() {
 
 // ── Bootstrap ─────────────────────────────────────────────────────
 async function init() {
-  await fetchPublicEvents();
+  await Promise.all([
+    fetchPublicEvents(),
+    fetchPublicKingdomEvents(),
+  ]);
 
   // Timer engine
   registerTick('ui', tick);
   startTimerEngine();
   updateClocks();
 
-  // Schedule notifications
+  // Schedule notifications for alliance events
   scheduleEventNotifications(getEvents());
+
+  // Schedule notifications for kingdom events
+  scheduleEventNotifications(getKingdomEvents());
+
   const creature = getCreature();
   if (creature.enabled) scheduleCreatureNotifications(creature);
 

@@ -4,6 +4,7 @@
 
 import {
   getEvents, saveEvents, getSettings, getCreature, saveCreature,
+  getKingdomEvents,
 } from './storage.js';
 
 import {
@@ -12,6 +13,7 @@ import {
   getCreatureRemaining, getCreatureNextSpawn, getCreaturePreviousSpawn,
   CREATURE_SPAWN_HOURS, scheduleCreatureNotifications,
   scheduleEventNotifications, refreshCreatureNotifications,
+  getKingdomEventStatus,
 } from './timers.js';
 import {
   requestNotificationPermission, getNotificationPermission,
@@ -86,15 +88,30 @@ export function renderApp(container) {
 
   const sorted  = [...events].sort((a, b) => getEventMs(a) - getEventMs(b));
   const nextEvt = sorted.find(e => e.active);
-  const admin   = false;
+
+  // Kingdom events
+  const allKingdom = getKingdomEvents().filter(e =>
+    !e.hidden && e.active && (e.recurring !== false || (e.targetMs || 0) > Date.now())
+  );
+  const sortedKingdom = [...allKingdom].sort((a, b) => {
+    const aS = getKingdomEventStatus(a);
+    const bS = getKingdomEventStatus(b);
+    const aMs = aS.phase === 'active' ? 0 : (aS.msUntilStart ?? Infinity);
+    const bMs = bS.phase === 'active' ? 0 : (bS.msUntilStart ?? Infinity);
+    return aMs - bMs;
+  });
 
   container.innerHTML = `
     <div class="fade-in">
       ${notifBannerHTML()}
       ${heroSectionHTML(nextEvt)}
+      ${kingdomHeroPanelHTML(sortedKingdom)}
       <div class="main-grid">
         ${creatureSectionHTML()}
-        ${eventsSectionHTML(sorted)}
+        <div class="events-column-wrap">
+          ${eventsSectionHTML(sorted)}
+          ${kingdomEventsSectionHTML(sortedKingdom)}
+        </div>
       </div>
       <footer class="app-footer">TheOutlanders - GoG · v1.0</footer>
     </div>
@@ -148,6 +165,64 @@ function heroSectionHTML(evt) {
           <span id="cd-s">${parts.s}</span>
           <span class="countdown-label">SEC</span>
         </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Kingdom Hero Mini-Panel ────────────────────────────────────────
+/**
+ * Shown below the main hero card when ≥1 kingdom event is active or starting
+ * within 24h. Each row shows live countdown with phase label.
+ * Hidden entirely when nothing qualifies.
+ */
+function kingdomHeroPanelHTML(sortedKingdom) {
+  // Filter to only active or upcoming (within 24h) events
+  const visible = sortedKingdom.filter(e => {
+    const s = getKingdomEventStatus(e);
+    return s.phase === 'active' || s.phase === 'upcoming';
+  });
+
+  const hasKillActive = visible.some(e => e.isKillEvent && getKingdomEventStatus(e).phase === 'active');
+
+  return `
+    <div id="kingdom-hero-panel" class="kingdom-hero-panel ${visible.length === 0 ? 'hidden' : ''}">
+      <div class="kingdom-hero-panel-header">
+        <span class="kingdom-hero-panel-title">🏰 Kingdom Events</span>
+        ${hasKillActive ? `<span class="kill-event-pill">☠️ KILL EVENT IN PROGRESS</span>` : ''}
+      </div>
+      <div id="kingdom-hero-rows">
+        ${visible.length > 0
+          ? visible.map(e => kingdomHeroRowHTML(e)).join('')
+          : ''
+        }
+      </div>
+    </div>
+  `;
+}
+
+function kingdomHeroRowHTML(evt) {
+  const status = getKingdomEventStatus(evt);
+  const isActive = status.phase === 'active';
+  const ms = isActive ? status.remainingMs : status.msUntilStart;
+  const phaseLabel = isActive ? 'ENDS IN' : 'STARTS IN';
+  const phaseClass = isActive ? 'active' : 'upcoming';
+
+  return `
+    <div class="kingdom-hero-row ${phaseClass} ${evt.isKillEvent ? 'kill-event' : ''}" id="khrow-${evt.id}">
+      <div class="kingdom-hero-row-left">
+        <span class="kingdom-hero-row-dot" style="background:${evt.color}"></span>
+        <div>
+          <div class="kingdom-hero-row-title">
+            ${evt.isKillEvent ? '<span class="kill-badge">☠️ Kill Event</span>' : ''}
+            ${evt.title}
+          </div>
+          ${evt.description ? `<div class="kingdom-hero-row-desc">${evt.description}</div>` : ''}
+        </div>
+      </div>
+      <div class="kingdom-hero-row-right">
+        <div class="kingdom-hero-phase-label">${phaseLabel}</div>
+        <div class="kingdom-hero-countdown ${isActive ? 'active' : 'upcoming'}" data-kingdom-cd="${evt.id}" data-kingdom-phase="${phaseClass}">${formatCountdown(ms)}</div>
       </div>
     </div>
   `;
@@ -294,7 +369,7 @@ function creatureSectionHTML() {
   `;
 }
 
-// ── Events section ────────────────────────────────────────────────
+// ── Alliance Events section ───────────────────────────────────────
 function eventsSectionHTML(sorted) {
   return `
     <div id="events-section">
@@ -352,6 +427,83 @@ function eventCardHTML(evt) {
   `;
 }
 
+// ── Kingdom Events section ────────────────────────────────────────
+function kingdomEventsSectionHTML(sortedKingdom) {
+  if (sortedKingdom.length === 0) return '';
+
+  const hasActiveKill = sortedKingdom.some(e => {
+    return e.isKillEvent && getKingdomEventStatus(e).phase === 'active';
+  });
+
+  return `
+    <div id="kingdom-events-section" style="margin-top:16px">
+      <div class="section-header">
+        <span class="section-title">🏰 Kingdom Events</span>
+      </div>
+
+      <!-- Kill Event danger banner -->
+      <div id="kill-event-banner" class="kill-event-banner ${hasActiveKill ? '' : 'hidden'}">
+        <div class="kill-event-banner-icon">☠️</div>
+        <div class="kill-event-banner-text">
+          <div class="kill-event-banner-title">KILL EVENT IN PROGRESS</div>
+          <div class="kill-event-banner-sub">Enemy players can attack your castle — Shield up and protect your troops!</div>
+        </div>
+        <div class="kill-event-banner-pulse"></div>
+      </div>
+
+      <div id="kingdom-events-list">
+        ${sortedKingdom.map(e => kingdomEventCardHTML(e)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function kingdomEventCardHTML(evt) {
+  const status    = getKingdomEventStatus(evt);
+  const isActive  = status.phase === 'active';
+  const isRecurring = evt.recurring !== false;
+  const utcStr    = `${getDayName(evt.dayOfWeek)} ${String(evt.hour).padStart(2,'0')}:${String(evt.minute).padStart(2,'0')} UTC`;
+  const nextDate  = isRecurring
+    ? getNextOccurrence(evt.dayOfWeek, evt.hour, evt.minute)
+    : new Date(evt.targetMs || Date.now());
+  const locStr    = formatLocalTime(nextDate);
+
+  const ms        = isActive ? status.remainingMs : (status.msUntilStart ?? getEventMs(evt));
+  const urgent    = isActive || ms < 3600000;
+  const phaseLabel = isActive
+    ? `<span class="kingdom-phase-active">● ACTIVE</span>`
+    : `<span class="kingdom-phase-upcoming">▶ UPCOMING</span>`;
+  const countdownLabel = isActive ? 'ENDS IN' : 'STARTS IN';
+
+  return `
+    <div class="event-card kingdom-event-card ${evt.isKillEvent ? 'kill-event' : ''} ${evt.active ? '' : 'disabled'}" id="kcard-${evt.id}">
+      <div class="event-color-bar" style="background:${evt.color}"></div>
+      <div class="event-info">
+        <div class="event-title">
+          ${evt.isKillEvent ? '<span class="kill-badge">☠️</span>' : ''}
+          ${evt.title}
+          <span style="
+            font-size:0.58rem;letter-spacing:0.5px;padding:1px 6px;
+            border-radius:10px;font-family:'Inter',sans-serif;font-weight:500;
+            margin-left:6px;vertical-align:middle;
+            ${isRecurring
+              ? 'background:rgba(212,168,0,0.12);color:var(--gold);border:1px solid rgba(212,168,0,0.25)'
+              : 'background:rgba(58,139,205,0.12);color:#7ec8ff;border:1px solid rgba(58,139,205,0.25)'
+            }
+          ">${isRecurring ? '🔂 weekly' : '1× once'}</span>
+        </div>
+        <div class="event-schedule">${utcStr} · ${locStr} · ${evt.durationHours}h duration</div>
+        ${evt.description ? `<div class="event-desc">${evt.description}</div>` : ''}
+        <div style="margin-top:3px">${phaseLabel}</div>
+      </div>
+      <div class="event-right">
+        <div class="kingdom-cd-label">${countdownLabel}</div>
+        <div class="countdown-sm ${urgent ? 'urgent' : ''}" data-kingdom-cd="${evt.id}" data-kingdom-phase="${isActive ? 'active' : 'upcoming'}">${formatCountdown(ms)}</div>
+      </div>
+    </div>
+  `;
+}
+
 // ── Bind all interactions ─────────────────────────────────────────
 function bindApp(container, sorted, nextEvt) {
   // Notification banner
@@ -380,11 +532,6 @@ export function updateLiveElements() {
     e => e.recurring === false && (e.targetMs || 0) <= Date.now()
   );
   if (expired.length > 0) {
-    // We just re-render to hide them. The actual array in memory doesn't
-    // strictly need removing since the filter in renderApp hides them,
-    // but we can just trigger a re-render to clear the DOM.
-    // However, to prevent infinite loops, we should mutate the cached event
-    // so it doesn't keep triggering this block every second.
     expired.forEach(e => { e.targetMs = undefined; e.recurring = false; e.hidden = true; });
     const appContent = document.getElementById('app-content');
     if (appContent) { renderApp(appContent); return; }
@@ -447,8 +594,6 @@ export function updateLiveElements() {
   const onMapTimerEl = document.getElementById('on-map-timer');
   if (banner) {
     if (onMap) {
-      // If the banner is empty (creature just came on map without a refresh),
-      // inject the full banner HTML so it displays correctly.
       if (!onMapTimerEl) {
         banner.style.cssText = `
           background: rgba(46,204,113,0.12);
@@ -477,7 +622,6 @@ export function updateLiveElements() {
             <div style="font-size:0.6rem;color:var(--text-muted);letter-spacing:0.5px">REMAINING</div>
           </div>
         `;
-        // Also re-render the spawn slots so the "ON MAP" badge appears
         const appContent = document.getElementById('app-content');
         if (appContent) { renderApp(appContent); return; }
       } else {
@@ -485,11 +629,9 @@ export function updateLiveElements() {
         onMapTimerEl.textContent = formatCountdown(onMap.remainingMs);
       }
     } else {
-      // Creature just went off map — clear the banner content and hide it
       if (onMapTimerEl) {
         banner.style.display = 'none';
         banner.innerHTML = '';
-        // Re-render so spawn slots update (ON MAP → DONE/NEXT)
         const appContent = document.getElementById('app-content');
         if (appContent) { renderApp(appContent); return; }
       } else {
@@ -498,7 +640,7 @@ export function updateLiveElements() {
     }
   }
 
-  // ─ All event countdowns ────────────────────────────────────────
+  // ─ All alliance event countdowns ──────────────────────────────
   document.querySelectorAll('[data-event-cd]').forEach(el => {
     const id  = el.dataset.eventCd;
     const evt = getEvents().find(e => e.id === id);
@@ -507,6 +649,9 @@ export function updateLiveElements() {
     el.textContent = formatCountdown(ms);
     el.classList.toggle('urgent', ms < 3600000);
   });
+
+  // ─ Kingdom event live updates ─────────────────────────────────
+  _updateKingdomLive();
 
   // Admin session timer in banner
   const adminTimerEl = document.getElementById('admin-session-timer');
@@ -520,3 +665,77 @@ export function updateLiveElements() {
   }
 }
 
+/**
+ * Kingdom events live tick — updates all countdowns and show/hide logic
+ * without a full page re-render.
+ */
+function _updateKingdomLive() {
+  const allKingdom = getKingdomEvents().filter(e =>
+    !e.hidden && e.active && (e.recurring !== false || (e.targetMs || 0) > Date.now())
+  );
+
+  // Track whether any event changed phase (active↔upcoming) since last render
+  // We detect this by checking if any [data-kingdom-phase] element needs updating
+  let needsRerender = false;
+
+  // ─ Update all countdown elements ────────────────────────────
+  document.querySelectorAll('[data-kingdom-cd]').forEach(el => {
+    const id  = el.dataset.kingdomCd;
+    const evt = allKingdom.find(e => e.id === id);
+    if (!evt) return;
+
+    const status = getKingdomEventStatus(evt);
+    const currentPhase = el.dataset.kingdomPhase;
+    const newPhase = status.phase === 'active' ? 'active' : 'upcoming';
+
+    // Phase changed → need a full re-render to swap labels and styles
+    if (currentPhase !== newPhase) {
+      needsRerender = true;
+      return;
+    }
+
+    const ms = status.phase === 'active' ? status.remainingMs : (status.msUntilStart ?? getEventMs(evt));
+    el.textContent = formatCountdown(ms);
+    el.classList.toggle('urgent', status.phase === 'active' || ms < 3600000);
+  });
+
+  if (needsRerender) {
+    const appContent = document.getElementById('app-content');
+    if (appContent) { renderApp(appContent); return; }
+  }
+
+  // ─ Kingdom hero mini-panel show/hide ────────────────────────
+  const panel = document.getElementById('kingdom-hero-panel');
+  if (panel) {
+    const visibleEvents = allKingdom.filter(e => {
+      const s = getKingdomEventStatus(e);
+      return s.phase === 'active' || s.phase === 'upcoming';
+    });
+
+    if (visibleEvents.length === 0) {
+      panel.classList.add('hidden');
+    } else {
+      panel.classList.remove('hidden');
+
+      // Update kill pill visibility
+      const killPill = panel.querySelector('.kill-event-pill');
+      const hasKillActive = visibleEvents.some(e => e.isKillEvent && getKingdomEventStatus(e).phase === 'active');
+      if (killPill) {
+        killPill.style.display = hasKillActive ? '' : 'none';
+      }
+    }
+  }
+
+  // ─ Kill event danger banner show/hide ───────────────────────
+  const killBanner = document.getElementById('kill-event-banner');
+  if (killBanner) {
+    const anyKillActive = allKingdom.some(e => e.isKillEvent && getKingdomEventStatus(e).phase === 'active');
+    killBanner.classList.toggle('hidden', !anyKillActive);
+  }
+
+  // ─ Kingdom events section show/hide ─────────────────────────
+  const kingdomSection = document.getElementById('kingdom-events-section');
+  if (kingdomSection) {
+    kingdomSection.style.display = allKingdom.length > 0 ? '' : 'none';
+  }
+}

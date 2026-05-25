@@ -11,34 +11,63 @@
   <style>
     body { background: #0d0d1a; color: #fff; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
     h1 { font-family: 'Rajdhani', sans-serif; color: #d4a800; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    h2.section-heading {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.4rem; font-weight: 700;
+      margin: 32px 0 16px;
+      padding: 10px 16px;
+      border-left: 3px solid;
+      border-radius: 0 6px 6px 0;
+      background: rgba(255,255,255,0.03);
+    }
+    h2.section-heading.alliance { color: #d4a800; border-color: #d4a800; }
+    h2.section-heading.kingdom  { color: #9b59b6; border-color: #9b59b6; }
     .layout { display: flex; gap: 20px; flex-wrap: wrap; }
     .panel { flex: 1; min-width: 300px; background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 8px; padding: 20px; }
+    .panel.kingdom-panel { border-color: rgba(155,89,182,0.35); }
     textarea { width: 100%; height: 400px; background: #000; color: #0f0; font-family: monospace; border: 1px solid #444; padding: 10px; box-sizing: border-box; }
     .btn { background: #3a8bcd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: 'Inter'; font-weight: 600; }
     .btn:hover { background: #2980b9; }
     .btn-danger { background: #e83a3a; }
     .btn-danger:hover { background: #c0392b; }
+    .btn-kingdom { background: #7d3c98; }
+    .btn-kingdom:hover { background: #6c3483; }
     .event-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 10px; border-left: 4px solid; }
     .actions button { margin-left: 5px; cursor: pointer; }
     .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .kill-note {
+      background: rgba(232,58,58,0.08);
+      border: 1px solid rgba(232,58,58,0.25);
+      border-radius: 6px; padding: 10px 14px;
+      font-size: 0.82rem; color: #ff9999;
+      margin-bottom: 16px;
+    }
+    .section-divider {
+      border: none; border-top: 1px solid rgba(255,255,255,0.06);
+      margin: 40px 0 0;
+    }
   </style>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <h1>🛠 Developer Admin: Event JSON Generator</h1>
-  <p style="color: #aaa;">This page is NOT built into the public website. Use this to generate your <code>events.json</code> file.</p>
-  
+  <p style="color: #aaa;">This page is NOT built into the public website. Use this to generate your <code>events.json</code> and <code>kingdom_events.json</code> files.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ALLIANCE EVENTS
+       ═══════════════════════════════════════════════════════════ -->
+  <h2 class="section-heading alliance">⚔️ Alliance Events</h2>
   <div class="layout">
     <!-- Left: Event List -->
     <div class="panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h2 style="margin: 0; font-family: 'Rajdhani';">Local Scratchpad</h2>
-        <button class="btn" id="admin-add-btn">＋ Add Event</button>
+        <button class="btn" id="admin-add-btn">＋ Add Alliance Event</button>
       </div>
       <div id="admin-events-list"></div>
       <hr style="border-color: #333; margin: 20px 0;" />
       <div style="display: flex; gap: 10px;">
-        <button class="btn btn-danger" id="admin-clear-btn" style="font-size: 0.8rem;">Clear Local Events</button>
+        <button class="btn btn-danger" id="admin-clear-btn" style="font-size: 0.8rem;">Clear Alliance Events</button>
         <button class="btn" id="admin-load-public-btn" style="background:#444; font-size: 0.8rem;">Load from public/data/events.json</button>
       </div>
     </div>
@@ -51,6 +80,44 @@
       </div>
       <p style="font-size: 0.85rem; color: #888; margin-top: 0;">Copy this text and paste it into <code>public/data/events.json</code></p>
       <textarea id="admin-json-out" readonly></textarea>
+    </div>
+  </div>
+
+  <hr class="section-divider" />
+
+  <!-- ═══════════════════════════════════════════════════════════
+       KINGDOM EVENTS
+       ═══════════════════════════════════════════════════════════ -->
+  <h2 class="section-heading kingdom">🏰 Kingdom Events</h2>
+
+  <div class="kill-note">
+    ☠️ <strong>Kill Events</strong> are kingdom-wide events where enemy players can attack your castle and kill troops for points.
+    Mark an event as a <em>Kill Event</em> to show a danger warning banner to all alliance members on the main site.
+  </div>
+
+  <div class="layout">
+    <!-- Left: Kingdom Event List -->
+    <div class="panel kingdom-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-family: 'Rajdhani'; color: #c39bd3;">Local Scratchpad</h2>
+        <button class="btn btn-kingdom" id="admin-kingdom-add-btn">＋ Add Kingdom Event</button>
+      </div>
+      <div id="admin-kingdom-events-list"></div>
+      <hr style="border-color: rgba(155,89,182,0.3); margin: 20px 0;" />
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-danger" id="admin-kingdom-clear-btn" style="font-size: 0.8rem;">Clear Kingdom Events</button>
+        <button class="btn" id="admin-kingdom-load-public-btn" style="background:#444; font-size: 0.8rem;">Load from public/data/kingdom_events.json</button>
+      </div>
+    </div>
+
+    <!-- Right: Kingdom JSON Output -->
+    <div class="panel kingdom-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="margin: 0; font-family: 'Rajdhani'; color: #c39bd3;">Generated kingdom_events.json</h2>
+        <button class="btn btn-kingdom" id="admin-kingdom-copy-btn">📋 Copy JSON</button>
+      </div>
+      <p style="font-size: 0.85rem; color: #888; margin-top: 0;">Copy this text and paste it into <code>public/data/kingdom_events.json</code></p>
+      <textarea id="admin-kingdom-json-out" readonly></textarea>
     </div>
   </div>
 

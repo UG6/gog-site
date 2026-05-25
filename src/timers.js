@@ -105,6 +105,7 @@ export function formatLocalTime(date) {
 /**
  * Schedule notifications for all active events.
  * Called on startup and whenever events change.
+ * Works for both alliance events and kingdom events.
  */
 export function scheduleEventNotifications(events) {
   events.filter(e => e.active && e.recurring).forEach(evt => {
@@ -115,13 +116,67 @@ export function scheduleEventNotifications(events) {
       const id = `evt_${evt.id}_${offsetMin}`;
       cancelScheduledNotification(id);
       if (fireAt > Date.now()) {
+        const isKill = evt.isKillEvent;
         const label = offsetMin === 0
-          ? `${evt.title} is starting NOW! ⚔️`
-          : `${evt.title} in ${offsetMin} min`;
-        scheduleNotification(id, fireAt, '⚔️ TheOutlanders - GoG', label);
+          ? isKill
+            ? `☠️ ${evt.title} is starting NOW! Shield up! ⚔️`
+            : `${evt.title} is starting NOW! ⚔️`
+          : isKill
+            ? `☠️ Kill Event: ${evt.title} in ${offsetMin} min – Prepare your defences!`
+            : `${evt.title} in ${offsetMin} min`;
+        const title = isKill ? '☠️ Kingdom Kill Event!' : '⚔️ TheOutlanders - GoG';
+        scheduleNotification(id, fireAt, title, label);
       }
     });
   });
+}
+
+// ── Kingdom Event Status ─────────────────────────────────────────
+
+/**
+ * Computes the current phase of a kingdom event.
+ *
+ * For a recurring event:
+ *  - We check both the "previous" occurrence (started, may still be active)
+ *    and the "next" occurrence (upcoming).
+ *
+ * Returns one of:
+ *  { phase: 'active',    remainingMs }   – started, within duration window
+ *  { phase: 'upcoming',  msUntilStart }  – starts within 24h
+ *  { phase: 'future' }                   – starts in > 24h
+ *  { phase: 'ended' }                    – one-time event fully expired
+ */
+export function getKingdomEventStatus(evt) {
+  const durationMs = (evt.durationHours || 1) * 3600 * 1000;
+  const now = Date.now();
+
+  if (evt.recurring !== false) {
+    // Check the most-recent past occurrence — it may still be active (within durationMs)
+    const nextMs = getNextOccurrence(evt.dayOfWeek, evt.hour, evt.minute).getTime();
+    const prevMs = nextMs - 7 * 24 * 3600 * 1000; // one week earlier = previous occurrence
+
+    if (now >= prevMs && now < prevMs + durationMs) {
+      return { phase: 'active', remainingMs: prevMs + durationMs - now };
+    }
+
+    const msUntilStart = nextMs - now;
+    if (msUntilStart <= 24 * 3600 * 1000) {
+      return { phase: 'upcoming', msUntilStart };
+    }
+
+    return { phase: 'future' };
+  } else {
+    // One-time event
+    const startMs = evt.targetMs || 0;
+    if (now >= startMs && now < startMs + durationMs) {
+      return { phase: 'active', remainingMs: startMs + durationMs - now };
+    }
+    if (startMs > now && startMs - now <= 24 * 3600 * 1000) {
+      return { phase: 'upcoming', msUntilStart: startMs - now };
+    }
+    if (startMs > now) return { phase: 'future' };
+    return { phase: 'ended' };
+  }
 }
 
 // ── Creature Capture Timer (Fixed UTC Spawn Times) ───────────────

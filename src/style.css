@@ -509,6 +509,160 @@ body {
 .fade-in { animation: fadeIn 0.35s ease; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
+/* ── Events column wrap (alliance + kingdom stacked) ────────────── */
+.events-column-wrap { display: flex; flex-direction: column; gap: 0; }
+
+/* ── Kingdom Hero Mini-Panel ────────────────────────────────────── */
+.kingdom-hero-panel {
+  background: linear-gradient(135deg, #1a0d2e 0%, #1e1128 100%);
+  border: 1px solid rgba(155,89,182,0.3);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.kingdom-hero-panel.hidden { display: none; }
+.kingdom-hero-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.kingdom-hero-panel-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--purple);
+}
+.kill-event-pill {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.8px;
+  padding: 3px 9px; border-radius: 20px;
+  background: rgba(232,58,58,0.18); border: 1px solid rgba(232,58,58,0.45);
+  color: var(--red-light);
+  animation: killPillPulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes killPillPulse {
+  from { opacity: 0.7; border-color: rgba(232,58,58,0.3); }
+  to   { opacity: 1;   border-color: rgba(232,58,58,0.65); box-shadow: 0 0 8px rgba(232,58,58,0.3); }
+}
+
+/* Kingdom hero rows */
+.kingdom-hero-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.03);
+  margin-bottom: 6px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.kingdom-hero-row:last-child { margin-bottom: 0; }
+.kingdom-hero-row.active {
+  background: rgba(232,58,58,0.07);
+  border-color: rgba(232,58,58,0.25);
+}
+.kingdom-hero-row.upcoming {
+  background: rgba(212,168,0,0.05);
+  border-color: rgba(212,168,0,0.18);
+}
+.kingdom-hero-row.kill-event.active {
+  background: rgba(232,58,58,0.1);
+  border-color: rgba(232,58,58,0.35);
+  animation: killRowPulse 2s ease-in-out infinite alternate;
+}
+@keyframes killRowPulse {
+  from { border-color: rgba(232,58,58,0.25); background: rgba(232,58,58,0.08); }
+  to   { border-color: rgba(232,58,58,0.5);  background: rgba(232,58,58,0.14); }
+}
+.kingdom-hero-row-left {
+  display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;
+}
+.kingdom-hero-row-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.kingdom-hero-row-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; font-weight: 700;
+  color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+}
+.kingdom-hero-row-desc {
+  font-size: 0.65rem; color: var(--text-muted); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kingdom-hero-row-right { text-align: right; flex-shrink: 0; }
+.kingdom-hero-phase-label {
+  font-size: 0.5rem; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 1px;
+}
+.kingdom-hero-countdown {
+  font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.5px;
+}
+.kingdom-hero-countdown.active  { color: var(--red-light); }
+.kingdom-hero-countdown.upcoming { color: var(--gold-light); }
+
+/* ── Kill event danger banner (inside kingdom events section) ────── */
+.kill-event-banner {
+  position: relative; overflow: hidden;
+  background: rgba(232,58,58,0.1);
+  border: 1px solid rgba(232,58,58,0.4);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 14px;
+  animation: killBannerPulse 2s ease-in-out infinite alternate;
+}
+.kill-event-banner.hidden { display: none; }
+@keyframes killBannerPulse {
+  from { border-color: rgba(232,58,58,0.3); background: rgba(232,58,58,0.07); }
+  to   { border-color: rgba(232,58,58,0.6); background: rgba(232,58,58,0.14); box-shadow: 0 0 16px rgba(232,58,58,0.15); }
+}
+.kill-event-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
+.kill-event-banner-text { flex: 1; }
+.kill-event-banner-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.88rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--red-light);
+}
+.kill-event-banner-sub {
+  font-size: 0.72rem; color: rgba(176,176,208,0.7); margin-top: 2px;
+}
+/* Animated shimmer sweep */
+.kill-event-banner-pulse {
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(232,58,58,0.08), transparent);
+  animation: bannerSweep 3s linear infinite;
+}
+@keyframes bannerSweep {
+  from { left: -60%; }
+  to   { left: 160%; }
+}
+
+/* ── Kingdom event cards ─────────────────────────────────────────── */
+.kingdom-event-card { position: relative; }
+.kingdom-event-card.kill-event {
+  border-color: rgba(232,58,58,0.2);
+}
+.kingdom-event-card.kill-event:hover { border-color: rgba(232,58,58,0.4); }
+
+/* Kill badge */
+.kill-badge {
+  display: inline-flex; align-items: center;
+  font-size: 0.9rem; margin-right: 2px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 3px rgba(232,58,58,0.5));
+}
+
+/* Phase labels inside kingdom cards */
+.kingdom-phase-active {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.8px;
+  color: var(--red-light); text-transform: uppercase;
+}
+.kingdom-phase-upcoming {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.8px;
+  color: var(--gold); text-transform: uppercase;
+}
+.kingdom-cd-label {
+  font-size: 0.5rem; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text-muted); text-align: right; margin-bottom: 1px;
+}
+
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE — Tablet (≥640px)
    ══════════════════════════════════════════════════════════════════ */
