@@ -22,7 +22,7 @@
     "dayOfWeek": 0,
     "hour": 20,
     "minute": 0,
-    "color": "#d4a800",
+    "color": "#e83a3a",
     "notifOffsets": [
       5,
       0
@@ -30,5 +30,37 @@
     "active": true,
     "recurring": true,
     "createdAt": 1779570978301
+  },
+  {
+    "id": "evt_1779635284585_ljvfe",
+    "title": "Underworld Gates",
+    "description": "Remember to donate Keys!",
+    "dayOfWeek": 6,
+    "hour": 19,
+    "minute": 30,
+    "color": "#d4a800",
+    "notifOffsets": [
+      5,
+      0
+    ],
+    "active": true,
+    "recurring": true,
+    "createdAt": 1779635284585
+  },
+  {
+    "id": "evt_1779635304518_6mqid",
+    "title": "Underworld Gates",
+    "description": "Remember to donate Keys!",
+    "dayOfWeek": 3,
+    "hour": 19,
+    "minute": 30,
+    "color": "#d4a800",
+    "notifOffsets": [
+      5,
+      0
+    ],
+    "active": true,
+    "recurring": true,
+    "createdAt": 1779635304518
   }
 ]
